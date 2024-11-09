@@ -1,31 +1,51 @@
 name: Run Aider
 
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+    workflow_call:
+      secrets:
+        OPENAI_API_KEY:
+          description: 'OpenAI API key'
+          required: true
+        DOCKER_HUB_USERNAME:
+          description: 'Username for Docker Hub'
+          required: true
+        DOCKER_HUB_PASSWORD:
+          description: 'Password for Docker Hub'
+          required: true
+# Secrets are inherited and include OPENAI_API_KEY, DOCKER_HUB_USERNAME, and DOCKER_HUB_PASSWORD
 
 jobs:
     run-aider:
         runs-on: ubuntu-latest
-        steps:
+        steps:   
         - name: Checkout repository
           uses: actions/checkout@v2
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v1
-
-        - name: Log in to Docker Hub
-          uses: docker/login-action@v1
+    
+        - name: Login to Docker Hub
+          uses: docker/login-action@v3
           with:
-            username: ${{ secrets.DOCKER_USERNAME }}
-            password: ${{ secrets.DOCKER_PASSWORD }}
-            
-        - name: Build Docker image
-          run: |
-            docker build -t aider-full .
+            username: ${{ secrets.DOCKER_HUB_USERNAME }}
+            password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
         - name: Run Aider from Docker container
+          env:
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           run: |
-            docker run --rm -v ${{ github.workspace }}:/repo -w /repo paulgauthier/aider-full 
+            docker run --rm -v ${{ github.workspace }}:/repo  -e OPENAI_API_KEY bwehrle/aider-agent:0.1 healthcheck
+# docker run --rm -v ${{ github.workspace }}:/repo  -e OPENAI_API_KEY --entrypoint /bin/sh bwehrle/aider-agent:0.1 -c 'git log '          
+            
+        - name: Check if branch is dirty
+          id: check_dirty
+          run: |
+            if [ -n "$(git diff main)" ]; then
+                echo "::set-output name=dirty::true"
+            else
+                echo "::set-output name=dirty::false"
+            fi
+
+        - name: Commit changes
+          if: steps.check_dirty.outputs.dirty == 'true'
+          uses: peter-evans/create-pull-request@v7
+          with:
+            title: 'AI-agent auto-fix'
+            branch: ai-agent-fix-${{ github.run_number }}
