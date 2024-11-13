@@ -37,10 +37,11 @@ jobs:
         - name: Check if branch is dirty
           id: check_dirty
           run: |
+            echo $(git status -sb)
             if [ -n "$(git status -sb | grep -e '\[ahead\s\d*\]')" ]; then
-                echo "::set-output name=dirty::true"
+                echo "dirty=true" >> $GITHUB_STATE
             else
-                echo "::set-output name=dirty::false"
+                echo "dirty=false" >> $GITHUB_STATE
             fi
 
         - name: Commit changes
