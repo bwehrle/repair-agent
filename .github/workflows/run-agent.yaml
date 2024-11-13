@@ -47,7 +47,9 @@ jobs:
             fi
         - name: Commit changes
           if: steps.check_dirty.outputs.dirty == 'true'
-          uses: peter-evans/create-pull-request@v7
-          with:
-            title: 'AI-agent auto-fix'
-            branch: ai-agent-fix-${{ github.run_number }}
+          run: |
+            git checkout -b $BRANCH
+            gh pr create -B main -H $BRANCH --title 'AI Agent PR ' --body 'Created by AI Agent'
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            BRANCH: ai-agent-${{ github.run_id }}
