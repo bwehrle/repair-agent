@@ -39,8 +39,10 @@ jobs:
           run: |
             echo $(git status -sb)
             if [ -n "$(git status -sb | grep -e '\[ahead\s\d*\]')" ]; then
+                echo Found commits ahead of remote branch
                 echo "dirty=true" >> $GITHUB_STATE
             else
+                echo No commits ahead of remote branch
                 echo "dirty=false" >> $GITHUB_STATE
             fi
 
