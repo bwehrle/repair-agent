@@ -12,6 +12,9 @@ on:
         DOCKER_HUB_PASSWORD:
           description: 'Password for Docker Hub'
           required: true
+        GITHUB_TOKEN:
+          description: 'GitHub token'
+          required: true
 # Secrets are inherited and include OPENAI_API_KEY, DOCKER_HUB_USERNAME, and DOCKER_HUB_PASSWORD
 
 jobs:
