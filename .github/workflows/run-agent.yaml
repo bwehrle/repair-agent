@@ -37,7 +37,7 @@ jobs:
         - name: Check if branch is dirty
           id: check_dirty
           run: |
-            if [ -n "$(git diff main)" ]; then
+            if [ -n "$(git status -sb | grep -e '\[ahead\s\d*\]')" ]; then
                 echo "::set-output name=dirty::true"
             else
                 echo "::set-output name=dirty::false"
